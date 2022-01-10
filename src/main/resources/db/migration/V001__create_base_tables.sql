@@ -13,18 +13,20 @@ CREATE TABLE operations.users
     role TEXT NOT NULL
 );
 
-CREATE TABLE operations.userhours
+CREATE TABLE operations.user_hours
 (
-    id       SERIAL UNIQUE PRIMARY KEY,
-    created  TIMESTAMPTZ DEFAULT NOW(),
-    updated  TIMESTAMPTZ DEFAULT NOW(),
-    user_ref INT REFERENCES operations.users ON DELETE CASCADE,
-    season   INT   NOT NULL,
-    date     DATE  NOT NULL,
-    hours    FLOAT NOT NULL,
-    comments TEXT        DEFAULT '',
+    id         SERIAL UNIQUE PRIMARY KEY,
+    created    TIMESTAMPTZ DEFAULT NOW(),
+    updated    TIMESTAMPTZ DEFAULT NOW(),
+    user_ref   INT REFERENCES operations.users ON DELETE CASCADE,
+    season     INT   NOT NULL,
+    date       DATE  NOT NULL,
+    start_time TIME  NOT NULL,
+    end_time   TIME  NOT NULL,
+    hours      FLOAT NOT NULL,
+    comments   TEXT        DEFAULT ''
 
-    CONSTRAINT user_date_unique unique (user_ref, date)
+--     CONSTRAINT user_date_unique unique (user_ref, date)
 );
 
 CREATE VIEW operations.user_goals AS
@@ -49,18 +51,51 @@ SELECT id,
            WHEN (role = '2022') THEN 40
            WHEN (role = '2023') THEN 30
            WHEN (role = '2024') THEN 20
-           WHEN (role = '2025 ') THEN 10
+           WHEN (role = '2025') THEN 10
            WHEN (role = 'Admin') THEN 50
            ELSE 60
            END AS report_order
 FROM operations.users;
 
+CREATE VIEW operations.user_ranges AS
+SELECT first_name,
+       last_name,
+       (first_name || ' ' || last_name)                                                  as full_name,
+       email,
+       date,
+       start_time,
+       end_time,
+       hours,
+       comments,
+       tsrange(to_char(date, '[YYYY-MM-DD') || ' ' || to_char(start_time, 'HH24:MI:SS') ||
+               to_char(date, ', YYYY-MM-DD') || ' ' || to_char(end_time, 'HH24:MI:SS]')) as hours_range
+from operations.users,
+     operations.user_hours
+WHERE user_hours.user_ref = users.id;
+
+
+CREATE VIEW operations.user_totals AS
+SELECT user_ref,
+       season,
+       date,
+       sum(hours) as hours
+FROM operations.user_hours
+GROUP BY user_ref, season, date;
+
+
 CREATE VIEW operations.team_totals AS
-SELECT first_name, last_name, (first_name ||' ' || last_name) as full_name, report_order, status_desc, sum(hours) as hours_total, goal
+SELECT first_name,
+       last_name,
+       (first_name || ' ' || last_name) as full_name,
+       report_order,
+       status_desc,
+       sum(hours)                       as hours,
+       goal
 FROM operations.users,
-     operations.userhours,
+     operations.user_hours,
      operations.user_goals
-WHERE userhours.user_ref = users.id
+WHERE user_hours.user_ref = users.id
   AND user_goals.id = users.id
   AND season = 2022
-GROUP BY users.id, goal, status_desc, report_order
+GROUP BY users.id, goal, status_desc, report_order;
+
