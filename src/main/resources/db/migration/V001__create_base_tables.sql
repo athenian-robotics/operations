@@ -10,7 +10,7 @@ CREATE TABLE operations.users
     email      TEXT NOT NULL UNIQUE,
     first_name TEXT NOT NULL,
     last_name  TEXT NOT NULL,
-    role TEXT NOT NULL
+    role       TEXT NOT NULL
 );
 
 CREATE TABLE operations.user_hours
@@ -32,26 +32,29 @@ CREATE TABLE operations.user_hours
 CREATE VIEW operations.user_goals AS
 SELECT id,
        CASE
-           WHEN (role = '2022') THEN 220
-           WHEN (role = '2023') THEN 200
-           WHEN (role = '2024') THEN 180
-           WHEN (role = '2025 ') THEN 160
+           WHEN (role = 'Leadership') THEN 200
+           WHEN (role = '2023') THEN 120
+           WHEN (role = '2024') THEN 120
+           WHEN (role = '2025') THEN 80
+           WHEN (role = '2026') THEN 40
            WHEN (role = 'Admin') THEN 100
            ELSE 100
            END AS goal,
        CASE
-           WHEN (role = '2022') THEN 'Senior'
-           WHEN (role = '2023') THEN 'Junior'
-           WHEN (role = '2024') THEN 'Sophomore'
-           WHEN (role = '2025') THEN 'Freshman'
+           WHEN (role = 'Leadership') THEN 'Leadership'
+           WHEN (role = '2023') THEN 'Senior'
+           WHEN (role = '2024') THEN 'Junior'
+           WHEN (role = '2025') THEN 'Sophomore'
+           WHEN (role = '2026') THEN 'Freshman'
            WHEN (role = 'Admin') THEN 'Mentor/Faculty'
            ELSE 'Unknown'
            END AS status_desc,
        CASE
-           WHEN (role = '2022') THEN 40
-           WHEN (role = '2023') THEN 30
-           WHEN (role = '2024') THEN 20
-           WHEN (role = '2025') THEN 10
+           WHEN (role = 'Leadership') THEN 45
+           WHEN (role = '2023') THEN 40
+           WHEN (role = '2024') THEN 30
+           WHEN (role = '2025') THEN 20
+           WHEN (role = '2026') THEN 10
            WHEN (role = 'Admin') THEN 50
            ELSE 60
            END AS report_order
@@ -96,6 +99,6 @@ FROM operations.users,
      operations.user_goals
 WHERE user_hours.user_ref = users.id
   AND user_goals.id = users.id
-  AND season = 2022
+  AND season = 2023
 GROUP BY users.id, goal, status_desc, report_order;
 
